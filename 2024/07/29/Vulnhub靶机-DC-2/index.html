@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Vulnhub靶机 DC-2 | Ya0rk の Blog</title><meta name="author" content="Ya0rk"><meta name="copyright" content="Ya0rk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="信息收集使用arp-scan -l 或者 nmap扫描到靶机地址：  使用namp -A -p- -v 192.168.15.134探测靶机开启的服务：==注意：使用-A会比较慢（但是看到的东西也多）==80端口：web7744端口：ssh  这里用-p-扫出来的端口多一个： flag1==由于中途将kali和靶机换成了桥接，所以靶机地址">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vulnhub靶机 DC-2">
+<meta property="og:url" content="http://example.com/2024/07/29/Vulnhub%E9%9D%B6%E6%9C%BA-DC-2/index.html">
+<meta property="og:site_name" content="Ya0rk の Blog">
+<meta property="og:description" content="信息收集使用arp-scan -l 或者 nmap扫描到靶机地址：  使用namp -A -p- -v 192.168.15.134探测靶机开启的服务：==注意：使用-A会比较慢（但是看到的东西也多）==80端口：web7744端口：ssh  这里用-p-扫出来的端口多一个： flag1==由于中途将kali和靶机换成了桥接，所以靶机地址">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/cover.jpg">
+<meta property="article:published_time" content="2024-07-29T13:50:18.000Z">
+<meta property="article:modified_time" content="2024-07-31T05:02:15.518Z">
+<meta property="article:author" content="Ya0rk">
+<meta property="article:tag" content="web">
+<meta property="article:tag" content="打靶">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/cover.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2024/07/29/Vulnhub%E9%9D%B6%E6%9C%BA-DC-2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"><link rel="preconnect" href="//busuanzi.ibruce.info"><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Vulnhub靶机 DC-2',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-07-31 13:02:15'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/modify.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><hr class="custom-hr"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ya0rk の Blog"><span class="site-name">Ya0rk の Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Vulnhub靶机 DC-2</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-07-29T13:50:18.000Z" title="发表于 2024-07-29 21:50:18">2024-07-29</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-07-31T05:02:15.518Z" title="更新于 2024-07-31 13:02:15">2024-07-31</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/web/">web</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Vulnhub靶机 DC-2"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><p>使用<code>arp-scan -l</code> 或者 <code>nmap</code>扫描到靶机地址：</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240729220701.png"></p>
+<p>使用<code>namp -A -p- -v 192.168.15.134</code>探测靶机开启的服务：<br>==注意：使用-A会比较慢（但是看到的东西也多）==<br>80端口：web<br>7744端口：ssh</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240729221933.png"></p>
+<p>这里用<code>-p-</code>扫出来的端口多一个：<br><img src="/img/my_post_img/Pasted%20image%2020240729221341.png"></p>
+<h1 id="flag1"><a href="#flag1" class="headerlink" title="flag1"></a>flag1</h1><p>==由于中途将kali和靶机换成了桥接，所以靶机地址有所改变（192.168.0.131），但是无伤大雅==<br>开放了80端口，我们在浏览器中访问一下界面。<br>发现：当我们直接访问ip地址的80端口时会失败，IP地址会自动转化为dc-2的域名，所以可能是域名解析失败，我们尝试在<code>/etc/hosts</code>文件中添加一个ip地址的指向。</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">192.168.0.131  dc-2</span><br></pre></td></tr></tbody></table></figure>
+
+<p>成功访问：这是一个WordPress网站，同时发现了flag1，提示我们用爆破密码</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240729233235.png"><br><img src="/img/my_post_img/Pasted%20image%2020240729233525.png"></p>
+<h1 id="flag2"><a href="#flag2" class="headerlink" title="flag2"></a>flag2</h1><p>后台扫描以下：发现了登录界面：<br><img src="/img/my_post_img/Pasted%20image%2020240729233819.png"></p>
+<p>进去看看：<br><img src="/img/my_post_img/Pasted%20image%2020240729234014.png"></p>
+<p>因为我们已经知道这是WordPress站点，那么我们就用针对工具——wpscan。<br>这是常用命令：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">wpscan --url http://dc-2</span><br><span class="line">wpscan --url http://dc-2 --enumerate t 扫描主题</span><br><span class="line">wpscan --url http://dc-2 --enumerate p 扫描插件</span><br><span class="line">wpscan --url http://dc-2 --enumerate u 枚举用户</span><br></pre></td></tr></tbody></table></figure>
+
+<p>首先信息收集，扫描一下WordPress版本：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">wpscan --url http://dc-2 </span><br></pre></td></tr></tbody></table></figure>
+<p>发现是4.7.10：<br><img src="/img/my_post_img/Pasted%20image%2020240729234607.png"></p>
+<p>然后爆破登录界面的账号密码：</p>
+<ul>
+<li>先爆破账户名，然后再用账户名爆破密码<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">wpscan --url http://dc-2 --enumerate u</span><br></pre></td></tr></tbody></table></figure>
+发现了三个账户名：<br><img src="/img/my_post_img/Pasted%20image%2020240729234948.png"></li>
+</ul>
+<p>根据flag1可以用暴力破解，我们使用==cewl==生成字典passwd，使用wpscan进行暴力破解。</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">cewl http://dc-2 &gt; passwd</span><br></pre></td></tr></tbody></table></figure>
+
+<p><img src="/img/my_post_img/Pasted%20image%2020240729235348.png"></p>
+<p>爆破：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">wpscan --url http://dc-2 --passwords passwd</span><br></pre></td></tr></tbody></table></figure>
+<p>成功两个：<br><img src="/img/my_post_img/Pasted%20image%2020240729235935.png"></p>
+<p>先用jerry账号试试：发现flag2<br><img src="/img/my_post_img/Pasted%20image%2020240730000146.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240730000221.png"></p>
+<h1 id="flag3"><a href="#flag3" class="headerlink" title="flag3"></a>flag3</h1><p>==换了一个 局域网 所以靶机地址有变。==<br>根据flag2提示：希望我们找到另一种方法进入。由于之前我们发现了靶机开启了ssh服务，所以我们尝试ssh链接靶机。</p>
+<p>两个账号分别尝试，最终在tom账户中发现了flag3。</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">ssh tom@192.168.31.112 -p 7744</span><br></pre></td></tr></tbody></table></figure>
+
+<p><img src="/img/my_post_img/Pasted%20image%2020240731121315.png"></p>
+<p>没有cat指令，我们可以尝试反弹shell完成或者查看tom用户存在的指令，同时我们也知道了这是一个rbash。<br><code>echo $PATH</code>：查看环境变量；<br><code>ls /home/tom/usr/bin</code>:查看存在的指令；<br><img src="/img/my_post_img/Pasted%20image%2020240731121721.png"></p>
+<p>那我们就能用vi来查看flag3.txt：<br><img src="/img/my_post_img/Pasted%20image%2020240731121438.png"></p>
+<h1 id="flag4"><a href="#flag4" class="headerlink" title="flag4"></a>flag4</h1><p>接下来就是rbash逃逸(下面两篇文章都行)：<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_43168364/article/details/111830233">【渗透测试】— rbash逃逸方法简述-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://www.freebuf.com/vuls/376922.html">https://www.freebuf.com/vuls/376922.html</a></p>
+<ul>
+<li>在命令行依次执行如下所示的命令<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line"># 利用bash_cmds自定义一个shell</span><br><span class="line">BASH_CMDS[a]=/bin/sh;a </span><br><span class="line"></span><br><span class="line"># 添加环境变量</span><br><span class="line">export PATH=$PATH:/bin/</span><br><span class="line">export PATH=$PATH:/usr/bin</span><br></pre></td></tr></tbody></table></figure></li>
+</ul>
+<p>接着：flag4提示我们要用git来提权</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240731124342.png"></p>
+<h1 id="final-flag"><a href="#final-flag" class="headerlink" title="final flag"></a>final flag</h1><p>我们使用<code>sudo -l</code>来查看该用户被授权了那些指令</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240731125323.png"></p>
+<p>发现jerry可以使用git的root权限。<br>使用git命令进行提取，上面一篇文章中也有讲到。</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240731125555.png"><br><img src="/img/my_post_img/Pasted%20image%2020240731125606.png"></p>
+<p>这样就提权成功，发现有final flag</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Ya0rk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/07/29/Vulnhub%E9%9D%B6%E6%9C%BA-DC-2/">http://example.com/2024/07/29/Vulnhub%E9%9D%B6%E6%9C%BA-DC-2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Ya0rk の Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/web/">web</a><a class="post-meta__tags" href="/tags/%E6%89%93%E9%9D%B6/">打靶</a></div><div class="post_share"><div class="social-share" data-image="/img/cover.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer=""></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/07/29/mypost/" title="mypost"><img class="cover" src="/img/cover.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">mypost</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"></div><div class="author-info__name">Ya0rk</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Ya0rk/Ya0rk.github.io"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86"><span class="toc-number">1.</span> <span class="toc-text">信息收集</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#flag1"><span class="toc-number">2.</span> <span class="toc-text">flag1</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#flag2"><span class="toc-number">3.</span> <span class="toc-text">flag2</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#flag3"><span class="toc-number">4.</span> <span class="toc-text">flag3</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#flag4"><span class="toc-number">5.</span> <span class="toc-text">flag4</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#final-flag"><span class="toc-number">6.</span> <span class="toc-text">final flag</span></a></li></ol></div></div></div></div></main><footer id="footer" style="background: transparent"><div id="footer-wrap"><div class="copyright">©2020 - 2024 By Ya0rk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async="" data-pjax="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
