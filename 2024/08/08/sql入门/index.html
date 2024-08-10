@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>sql入门 | Ya0rk の Blog</title><meta name="author" content="Ya0rk"><meta name="copyright" content="Ya0rk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="信息查询数据库名的查询select database();  数据库版本防火墙的绕过会涉及。 select version();  判断字符型还是数字型注释符：“#”  “–+”  “%23” 方法1：使用 and 1=1 和 and 1=2 来判断 比如对于lab1，我们提交?id=1 and 1=1 或者?id=1 and 1=2都能正常显示界面，则不可能是数字型注入，即为字符型注入。对于la">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sql入门">
+<meta property="og:url" content="http://example.com/2024/08/08/sql%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Ya0rk の Blog">
+<meta property="og:description" content="信息查询数据库名的查询select database();  数据库版本防火墙的绕过会涉及。 select version();  判断字符型还是数字型注释符：“#”  “–+”  “%23” 方法1：使用 and 1=1 和 and 1=2 来判断 比如对于lab1，我们提交?id=1 and 1=1 或者?id=1 and 1=2都能正常显示界面，则不可能是数字型注入，即为字符型注入。对于la">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/cover.jpg">
+<meta property="article:published_time" content="2024-08-08T06:18:59.743Z">
+<meta property="article:modified_time" content="2024-08-10T06:03:50.602Z">
+<meta property="article:author" content="Ya0rk">
+<meta property="article:tag" content="sql注入">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/cover.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2024/08/08/sql%E5%85%A5%E9%97%A8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"><link rel="preconnect" href="//busuanzi.ibruce.info"><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'sql入门',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-08-10 14:03:50'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/modify.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><hr class="custom-hr"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ya0rk の Blog"><span class="site-name">Ya0rk の Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">sql入门</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-08-08T06:18:59.743Z" title="发表于 2024-08-08 14:18:59">2024-08-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-08-10T06:03:50.602Z" title="更新于 2024-08-10 14:03:50">2024-08-10</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/sql/">sql</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="sql入门"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><h1 id="信息查询"><a href="#信息查询" class="headerlink" title="信息查询"></a>信息查询</h1><h2 id="数据库名的查询"><a href="#数据库名的查询" class="headerlink" title="数据库名的查询"></a>数据库名的查询</h2><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select database();</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="数据库版本"><a href="#数据库版本" class="headerlink" title="数据库版本"></a>数据库版本</h2><p>防火墙的绕过会涉及。</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select version();</span><br></pre></td></tr></tbody></table></figure>
+
+<h1 id="判断字符型还是数字型"><a href="#判断字符型还是数字型" class="headerlink" title="判断字符型还是数字型"></a>判断字符型还是数字型</h1><p>注释符：“#”  “–+”  “%23”</p>
+<p><strong>方法1：使用 <code>and 1=1</code> 和 <code>and 1=2</code> 来判断</strong></p>
+<p>比如对于lab1，我们提交<code>?id=1 and 1=1</code> 或者<code>?id=1 and 1=2</code>都能正常显示界面，则不可能是数字型注入，即为字符型注入。<br>对于lab1，我们提交<code>?id=1 and 1=2</code>都不能正常显示界面，则为数字型注入。</p>
+<p>如果是数字型注入，那我们就不需要测试闭合方式，否则还需要判断闭合方式：<code>' " ') ")</code>。</p>
+<p><strong>方法2：使用 <code>id=2-1</code></strong></p>
+<p>数字型是可以进行运算的，那么就相当于是<code>id=1</code>。</p>
+<p>注意：最好不用 + ，在URL编码中通常会使用 + 或 %20 来代替空格，解码会把 + 编码为空格。<br>所以有时我们也可以用 + 绕过空格限制。</p>
+<h1 id="对列数的判断"><a href="#对列数的判断" class="headerlink" title="对列数的判断"></a>对列数的判断</h1><h2 id="union"><a href="#union" class="headerlink" title="union"></a>union</h2><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select * from users where id=1 union select 1,2,3;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>增加<code>union</code>后面的数字，当报错说明超过最大列数。</p>
+<h3 id="判断数据位置"><a href="#判断数据位置" class="headerlink" title="判断数据位置"></a>判断数据位置</h3><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select * from users where id=-1 union select 1,2,3;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这里id后面我们要写不存在的id号，这样就能将1,2,3显示在对应的位置；<br>当我们写正常存在的id，那么就不会显示1，2，3；<br><img src="/img/my_post_img/Pasted%20image%2020240808152709.png"></p>
+<p>这样就知道2,3处的数据会显示，以及位置。<br><img src="/img/my_post_img/Pasted%20image%2020240808152758.png"></p>
+<p>接下来就是在2或者3处构造，就能在对应位置显示数据：<br><img src="/img/my_post_img/Pasted%20image%2020240808152913.png"></p>
+<h2 id="group-by"><a href="#group-by" class="headerlink" title="group by"></a>group by</h2><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select * from users where id=1 group by 1;</span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>group by</code>：按照第几列进行分组。<br>替换<code>group by</code>后面的数字，当报错说明超过最大列数。</p>
+<h2 id="order-by"><a href="#order-by" class="headerlink" title="order by"></a>order by</h2><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select * from users where id=1 order by 1;</span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>order by</code>：按照第几列进行排序（默认是升序，desc表示降序）。<br>替换<code>order by</code>后面的数字，当报错说明超过最大列数。</p>
+<h1 id="回显限制，多行-1行"><a href="#回显限制，多行-1行" class="headerlink" title="回显限制，多行->1行"></a>回显限制，多行-&gt;1行</h1><p>有些地方回显只有一行，我们可以利用这一行来显示多行数据，通过将多行数据整合到一行。</p>
+<h2 id="group-concat"><a href="#group-concat" class="headerlink" title="group_concat"></a>group_concat</h2><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select group_cancat(id, username, passwd) from users;</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="limit"><a href="#limit" class="headerlink" title="limit"></a>limit</h2><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select name from users limit 0,1;</span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>limit 0,1</code>：0：第0行； 1：每次显示一行。</p>
+<h1 id="回显字符数限制"><a href="#回显字符数限制" class="headerlink" title="回显字符数限制"></a>回显字符数限制</h1><h2 id="substring（）"><a href="#substring（）" class="headerlink" title="substring（）"></a>substring（）</h2><p>如果回显限制了字符数，我们可以利用<code>substring</code>从后面开始显示。</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">substring(123456, 4, 3)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>参数一：需要显示的字符串<br>参数二：从第几个字符开始显示<br>参数三：一共显示几个字符</p>
+<h1 id="获取表名和列名"><a href="#获取表名和列名" class="headerlink" title="获取表名和列名"></a>获取表名和列名</h1><h2 id="提前了解"><a href="#提前了解" class="headerlink" title="提前了解"></a>提前了解</h2><p>数据库：<code>Information_schema</code>包含所有mysql数据库的简要信息，其中包含两个数据表：<br>    -  <code>tables</code>：存有所有表名<br>    -  <code>columns</code>：存有所有列名</p>
+<p><code>where</code>后面可以接上这些变量限制：</p>
+<ul>
+<li><strong>table_schema 是数据库的名称</strong></li>
+<li><strong>table_name 是具体的表名。</strong></li>
+<li><strong>table_type 表的类型。</strong></li>
+</ul>
+<p>可以看到显示了<code>email</code>表名，但是这里肯定还有其他表，显示不全，还需要其他手法。<br><code>table_schema</code>：哪个数据库。<br><img src="/img/my_post_img/Pasted%20image%2020240808154839.png"></p>
+<p>就是前面提到的<code>group_concat</code>。<br><img src="/img/my_post_img/Pasted%20image%2020240808155046.png"></p>
+<p>查找这个数据库下的所有列名：<br><img src="/img/my_post_img/Pasted%20image%2020240808160116.png"></p>
+<p>查找到用户名和密码：<br><img src="/img/my_post_img/Pasted%20image%2020240808160340.png"></p>
+<h1 id="报错注入"><a href="#报错注入" class="headerlink" title="报错注入"></a>报错注入</h1><p>原理：构造语句，让错误信息中夹杂可以显示数据库内如的查询语句。</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240808164200.png"></p>
+<h2 id="extractValue-报错注入"><a href="#extractValue-报错注入" class="headerlink" title="extractValue()报错注入"></a>extractValue()报错注入</h2><p><img src="/img/my_post_img/Pasted%20image%2020240808172231.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240808170655.png"></p>
+<p>我们就利用报错会返回路径来构造注入语句。</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select extratvalue(doc, concat(0x7e, (select database()))) from users;</span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>extractvalue()</code>：第一个参数可以随便写。<br><code>concat()</code>函数是将第一个参数和第二个参数拼接。<br>0x7e是 <code>~</code> 的ascii码。</p>
+<p>之后我们只用改变<code>concat()</code>的第二个参数，换为其他查询指令。</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240808173336.png"></p>
+<p>查询users表下面的所有列名：<br><img src="/img/my_post_img/Pasted%20image%2020240808173853.png"></p>
+<h2 id="updatexml报错注入"><a href="#updatexml报错注入" class="headerlink" title="updatexml报错注入"></a>updatexml报错注入</h2><h3 id="函数解析："><a href="#函数解析：" class="headerlink" title="函数解析："></a>函数解析：</h3><p><img src="/img/my_post_img/Pasted%20image%2020240810110634.png"></p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>同<code>extractvalue()</code>，输入错误的第二个参数，即更改路径符号：<br>正常句式：</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">select updatexml(doc, '/book', '1') from xml;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>输入错误路径会报错并返回路径，所以我们利用这个回显来返回我们想要的数据。<br><img src="/img/my_post_img/Pasted%20image%2020240810115057.png"></p>
+<h2 id="floor报错注入"><a href="#floor报错注入" class="headerlink" title="floor报错注入"></a>floor报错注入</h2><h3 id="涉及的函数解析"><a href="#涉及的函数解析" class="headerlink" title="涉及的函数解析"></a>涉及的函数解析</h3><p><code>rand()</code>：随机返回0-1之间的小数<br><code>floor()</code>：小数向下取整。向上取整<code>ceiling()</code><br><code>concat_ws()</code>：将括号内的数据用第一个字段连接起来<br><code>group_by()</code>：分组<br><code>as</code>：起别名<br><code>count()</code>：汇总统计数量<br><code>limit()</code>：用于显示指定行数</p>
+<p>例子：<br><img src="/img/my_post_img/Pasted%20image%2020240810120237.png"></p>
+<h3 id="技巧一"><a href="#技巧一" class="headerlink" title="技巧一"></a>技巧一</h3><p><code>select rand() from users;</code>users表中有多少行，就会调用<code>rand()</code>函数多少次；</p>
+<h3 id="技巧二"><a href="#技巧二" class="headerlink" title="技巧二"></a>技巧二</h3><p><code>select concat_ws('-', (select database()), 3);</code>：security-3</p>
+<h3 id="使用例子"><a href="#使用例子" class="headerlink" title="使用例子"></a>使用例子</h3><p>模版：我们只用改<code>select version()</code>为其他指令就行；</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">?id=1' union select 1,count(*),concat_ws('-', (select version()), floor(rand(0)*2)) as x from information_schema.tables group by x --+</span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>rand()</code>中数字有时需要改变来触发报错。</p>
+<h1 id="布尔盲注"><a href="#布尔盲注" class="headerlink" title="布尔盲注"></a>布尔盲注</h1><h3 id="关键函数"><a href="#关键函数" class="headerlink" title="关键函数"></a>关键函数</h3><p><code>ascii()</code>：返回字母的ascii值，例如<code>select ascii('a');</code></p>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">?id=1' and ascii(substr(select database(),1,1))&gt;=100 --+</span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>substr()</code>：按字符来判断，逐个爆破。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Ya0rk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/08/08/sql%E5%85%A5%E9%97%A8/">http://example.com/2024/08/08/sql%E5%85%A5%E9%97%A8/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Ya0rk の Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/sql%E6%B3%A8%E5%85%A5/">sql注入</a></div><div class="post_share"><div class="social-share" data-image="/img/cover.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer=""></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2024/08/09/orw%E8%BF%9B%E9%98%B6%E6%8A%80%E5%B7%A7/" title="orw进阶技巧"><img class="cover" src="/img/cover.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">orw进阶技巧</div></div></a></div><div class="next-post pull-right"><a href="/2024/08/07/%E8%A6%86%E7%9B%96.fini-array%E5%87%BD%E6%95%B0%E6%8C%87%E9%92%88/" title="覆盖.fini_array函数指针"><img class="cover" src="/img/cover.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">覆盖.fini_array函数指针</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"></div><div class="author-info__name">Ya0rk</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Ya0rk/Ya0rk.github.io"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BF%A1%E6%81%AF%E6%9F%A5%E8%AF%A2"><span class="toc-number">1.</span> <span class="toc-text">信息查询</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%90%8D%E7%9A%84%E6%9F%A5%E8%AF%A2"><span class="toc-number">1.1.</span> <span class="toc-text">数据库名的查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E7%89%88%E6%9C%AC"><span class="toc-number">1.2.</span> <span class="toc-text">数据库版本</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%A4%E6%96%AD%E5%AD%97%E7%AC%A6%E5%9E%8B%E8%BF%98%E6%98%AF%E6%95%B0%E5%AD%97%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">判断字符型还是数字型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AF%B9%E5%88%97%E6%95%B0%E7%9A%84%E5%88%A4%E6%96%AD"><span class="toc-number">3.</span> <span class="toc-text">对列数的判断</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#union"><span class="toc-number">3.1.</span> <span class="toc-text">union</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A4%E6%96%AD%E6%95%B0%E6%8D%AE%E4%BD%8D%E7%BD%AE"><span class="toc-number">3.1.1.</span> <span class="toc-text">判断数据位置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#group-by"><span class="toc-number">3.2.</span> <span class="toc-text">group by</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#order-by"><span class="toc-number">3.3.</span> <span class="toc-text">order by</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%9E%E6%98%BE%E9%99%90%E5%88%B6%EF%BC%8C%E5%A4%9A%E8%A1%8C-1%E8%A1%8C"><span class="toc-number">4.</span> <span class="toc-text">回显限制，多行-&gt;1行</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#group-concat"><span class="toc-number">4.1.</span> <span class="toc-text">group_concat</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#limit"><span class="toc-number">4.2.</span> <span class="toc-text">limit</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%9E%E6%98%BE%E5%AD%97%E7%AC%A6%E6%95%B0%E9%99%90%E5%88%B6"><span class="toc-number">5.</span> <span class="toc-text">回显字符数限制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#substring%EF%BC%88%EF%BC%89"><span class="toc-number">5.1.</span> <span class="toc-text">substring（）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E8%A1%A8%E5%90%8D%E5%92%8C%E5%88%97%E5%90%8D"><span class="toc-number">6.</span> <span class="toc-text">获取表名和列名</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8F%90%E5%89%8D%E4%BA%86%E8%A7%A3"><span class="toc-number">6.1.</span> <span class="toc-text">提前了解</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">7.</span> <span class="toc-text">报错注入</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#extractValue-%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">7.1.</span> <span class="toc-text">extractValue()报错注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#updatexml%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">7.2.</span> <span class="toc-text">updatexml报错注入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E8%A7%A3%E6%9E%90%EF%BC%9A"><span class="toc-number">7.2.1.</span> <span class="toc-text">函数解析：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">7.2.2.</span> <span class="toc-text">原理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#floor%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">7.3.</span> <span class="toc-text">floor报错注入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%89%E5%8F%8A%E7%9A%84%E5%87%BD%E6%95%B0%E8%A7%A3%E6%9E%90"><span class="toc-number">7.3.1.</span> <span class="toc-text">涉及的函数解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%80%E5%B7%A7%E4%B8%80"><span class="toc-number">7.3.2.</span> <span class="toc-text">技巧一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%80%E5%B7%A7%E4%BA%8C"><span class="toc-number">7.3.3.</span> <span class="toc-text">技巧二</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E4%BE%8B%E5%AD%90"><span class="toc-number">7.3.4.</span> <span class="toc-text">使用例子</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B8%83%E5%B0%94%E7%9B%B2%E6%B3%A8"><span class="toc-number">8.</span> <span class="toc-text">布尔盲注</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E5%87%BD%E6%95%B0"><span class="toc-number">8.0.1.</span> <span class="toc-text">关键函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BE%8B%E5%AD%90"><span class="toc-number">8.0.2.</span> <span class="toc-text">例子</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background: transparent"><div id="footer-wrap"><div class="copyright">©2020 - 2024 By Ya0rk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async="" data-pjax="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
