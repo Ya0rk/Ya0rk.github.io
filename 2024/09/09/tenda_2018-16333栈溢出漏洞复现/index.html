@@ -7,7 +7,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/longlin.jpg">
 <meta property="article:published_time" content="2024-09-08T16:00:00.000Z">
-<meta property="article:modified_time" content="2024-09-11T02:04:06.451Z">
+<meta property="article:modified_time" content="2024-09-11T02:05:56.476Z">
 <meta property="article:author" content="Ya0rk">
 <meta property="article:tag" content="栈溢出">
 <meta property="article:tag" content="IOT复现">
@@ -58,7 +58,7 @@
   isHome: false,
   isHighlightShrink: false,
   isToc: true,
-  postUpdate: '2024-09-11 10:04:06'
+  postUpdate: '2024-09-11 10:05:56'
 }</script><script>(win=>{
       win.saveToLocal = {
         set: (key, value, ttl) => {
@@ -155,7 +155,7 @@
         }
       }
       detectApple()
-    })(window)</script><link rel="stylesheet" href="/css/modify.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">29</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ya0rk の Blog"><span class="site-name">Ya0rk の Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">tenda_2018-16333栈溢出漏洞复现</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-09-08T16:00:00.000Z" title="发表于 2024-09-09 00:00:00">2024-09-09</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-09-11T02:04:06.451Z" title="更新于 2024-09-11 10:04:06">2024-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/IOT/">IOT</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="tenda_2018-16333栈溢出漏洞复现"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><p>这是真正意义上第一次复现IOT漏洞，也是参考了许多大佬的博客，算是“站在巨人的肩膀上”进行入门学习了。</p>
+    })(window)</script><link rel="stylesheet" href="/css/modify.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">29</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ya0rk の Blog"><span class="site-name">Ya0rk の Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">tenda_2018-16333栈溢出漏洞复现</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-09-08T16:00:00.000Z" title="发表于 2024-09-09 00:00:00">2024-09-09</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-09-11T02:05:56.476Z" title="更新于 2024-09-11 10:05:56">2024-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/IOT/">IOT</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="tenda_2018-16333栈溢出漏洞复现"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><p>这是真正意义上第一次复现IOT漏洞，也是参考了许多大佬的博客，算是“站在巨人的肩膀上”进行入门学习了。</p>
 <h1 id="固件获取"><a href="#固件获取" class="headerlink" title="固件获取"></a>固件获取</h1><p>固件地址：<a target="_blank" rel="noopener" href="https://github.com/Snowleopard-bin/pwn/tree/master/IOT/Tenda_CVE-2018-16333">pwn/IOT/Tenda_CVE-2018-16333 at master · Snowleopard-bin/pwn (github.com)</a></p>
 <p>这里有poc和固件。</p>
 <h1 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h1><h2 id="前期处理"><a href="#前期处理" class="headerlink" title="前期处理"></a>前期处理</h2><p>首先是使用<code>binwalk</code>提取固件。</p>
@@ -226,34 +226,34 @@
 <hr>
 <p>在前面网络通信卡了好久（呜呜呜</p>
 <p>测试一下宿主机和qemu虚拟机是否能ping通：</p>
-<p><img src="/Pasted%20image%2020240910211704.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910211704.png"></p>
 <p>测试通过，接下来实现将宿主机中的<code>squashfs-root</code>目录传到qemu虚拟机中，我们使用<code>scp</code>服务。</p>
 <figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在宿主机中压缩整个文件目录</span></span><br><span class="line">sudo tar -zcvf ../squashfs-root.tar.gz ./</span><br></pre></td></tr></tbody></table></figure>
 
 <figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在qemu虚拟机中，下载文件到/root目录下</span></span><br><span class="line">scp iot@192.168.15.100:/home/iot/Desktop/_US_AC15V1.0BR_V15.03.05.19_multi_TD01.bin.extracted/squashfs-root.tar.gz /root/</span><br></pre></td></tr></tbody></table></figure>
 
-<p><img src="/Pasted%20image%2020240910211624.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910211624.png"></p>
 <p>解压目录并删除压缩包：</p>
 <figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">tar xzf squashfs-root.tar.gz &amp;&amp; rm squashfs-root.tar.gz</span><br></pre></td></tr></tbody></table></figure>
 
 <p>已经解压出文件目录了：</p>
-<p><img src="/Pasted%20image%2020240910211818.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910211818.png"></p>
 <p><strong>挂载文件目录</strong>：</p>
 <figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">mount -o bind /dev /root/dev &amp;&amp; mount -t proc /proc /root/proc</span><br></pre></td></tr></tbody></table></figure>
 
 <p>切换文件工作目录并打开<code>sh</code>终端，这时程序会将<code>/root</code>目录当做根目录：</p>
 <figure class="highlight sh"><table><tbody><tr><td class="code"><pre><span class="line"><span class="built_in">chroot</span> /root sh</span><br></pre></td></tr></tbody></table></figure>
 
-<p><img src="/Pasted%20image%2020240910212211.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910212211.png"></p>
 <p>为qemu虚拟机添加虚拟网卡并激活：</p>
 <figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">brctl addif br0</span><br><span class="line">ifconfig br0 192.168.15.76/24 up</span><br></pre></td></tr></tbody></table></figure>
 
-<p><img src="/Pasted%20image%2020240910212433.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910212433.png"></p>
 <p>终于到了这里，最后一步就是启动程序了：</p>
 <figure class="highlight shell"><table><tbody><tr><td class="code"><pre><span class="line">./bin/httpd/ &amp;</span><br></pre></td></tr></tbody></table></figure>
 
 <p><strong>qemu虚拟机退出方法：同时按ctrl+a之后，再按c，出现(qemu)时输入q即可退出。</strong></p>
-<p><img src="/Pasted%20image%2020240910230435.png"></p>
+<p><img src="/img/my_post_img/Pasted%20image%2020240910230435.png"></p>
 <p>接下来就是宿主机远程调试<code>qemu</code>中运行的<code>httpd</code>了。</p>
 <hr>
 <p>去<a target="_blank" rel="noopener" href="https://github.com/b0ldfrev/embedded-toolkit/tree/master/prebuilt_static_bins/gdbserver">github</a>中下载静态编译好的gdbserver:</p>
