@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>rust异步运行时设计 | Ya0rk の Blog</title><meta name="author" content="Ya0rk"><meta name="copyright" content="Ya0rk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="在了解无栈协程前，我们先看看有栈的情况，其实这就是普通的函数调用。 有栈协程在c语言中，函数调用和返回过程中会使用栈上数据进行恢复调用前状态。程序总体上是同步顺序运行的，他们都使用同一个栈。但是随着不断地函数调用，这个栈会越来越深，所以会带来极大的开销。  而有栈协程中的有栈到底是什么意思，这里其实是约定成俗想表达对于每个新创建的协程来说:他们都独立运行与一块新的栈，这块栈是从堆(基于mmap维护">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust异步运行时设计">
+<meta property="og:url" content="http://example.com/2024/11/05/rust/rust%E5%BC%82%E6%AD%A5%E6%97%A0%E6%A0%88%E5%8D%8F%E7%A8%8B/index.html">
+<meta property="og:site_name" content="Ya0rk の Blog">
+<meta property="og:description" content="在了解无栈协程前，我们先看看有栈的情况，其实这就是普通的函数调用。 有栈协程在c语言中，函数调用和返回过程中会使用栈上数据进行恢复调用前状态。程序总体上是同步顺序运行的，他们都使用同一个栈。但是随着不断地函数调用，这个栈会越来越深，所以会带来极大的开销。  而有栈协程中的有栈到底是什么意思，这里其实是约定成俗想表达对于每个新创建的协程来说:他们都独立运行与一块新的栈，这块栈是从堆(基于mmap维护">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/cute.jpg">
+<meta property="article:published_time" content="2024-11-05T11:34:37.000Z">
+<meta property="article:modified_time" content="2024-11-12T03:44:44.217Z">
+<meta property="article:author" content="Ya0rk">
+<meta property="article:tag" content="rust">
+<meta property="article:tag" content="无栈协程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/cute.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2024/11/05/rust/rust%E5%BC%82%E6%AD%A5%E6%97%A0%E6%A0%88%E5%8D%8F%E7%A8%8B/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"><link rel="preconnect" href="//busuanzi.ibruce.info"><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'rust异步运行时设计',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-11-12 11:44:44'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/modify.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">38</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ya0rk の Blog"><span class="site-name">Ya0rk の Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">rust异步运行时设计</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-11-05T11:34:37.000Z" title="发表于 2024-11-05 19:34:37">2024-11-05</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-11-12T03:44:44.217Z" title="更新于 2024-11-12 11:44:44">2024-11-12</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/rust/">rust</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="rust异步运行时设计"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><p>在了解无栈协程前，我们先看看有栈的情况，其实这就是普通的函数调用。</p>
+<h1 id="有栈协程"><a href="#有栈协程" class="headerlink" title="有栈协程"></a>有栈协程</h1><p>在c语言中，函数调用和返回过程中会使用栈上数据进行恢复调用前状态。程序总体上是同步顺序运行的，他们都使用同一个栈。但是随着不断地函数调用，这个栈会越来越深，所以会带来极大的开销。</p>
+<blockquote>
+<p>而有栈协程中的<code>有栈</code>到底是什么意思，这里其实是约定成俗想表达对于每个新创建的协程来说:他们都独立运行与一块新的栈，<code>这块栈是从堆(基于mmap维护了整个内存管理)上面申请的</code>，没用共用系统栈，那么这个协程的生命周期和上下文都能够被完整保存，可以被任意时间和任意线程独立执行</p>
+</blockquote>
+<h2 id="go-创建协程"><a href="#go-创建协程" class="headerlink" title="go 创建协程"></a>go 创建协程</h2><p>在golang中可以使用<code>go</code>关键字创建协程，在创建后整个函数与当前的主线程没有瓜葛，相当于单独开辟一个栈给这个程序使用。</p>
+<figure class="highlight go"><table><tbody><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>{  </span><br><span class="line">    fmt.Println(<span class="string">"this is a goroutine print!"</span>)  </span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这里就不深入了解了，主要是需要学习无栈协程。</p>
+<h1 id="无栈协程"><a href="#无栈协程" class="headerlink" title="无栈协程"></a>无栈协程</h1><p>协程的实现需要保存上下文，但是我又不能依赖栈，因为这样可能会带来其他开销，那我们该如何做到呢？带着这个疑问我们看看rust魔法。</p>
+<p>首先看看goland和rust关于协程的语法区别：</p>
+<figure class="highlight golang"><table><tbody><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>{  </span><br><span class="line">    <span class="keyword">go</span> fun(){  </span><br><span class="line">        fmt.Println(<span class="string">"ready to sleep!"</span>)  </span><br><span class="line">        time.Sleep(<span class="number">8</span> * time.Second)   </span><br><span class="line">        <span class="comment">//会暂停当前函数执行,给其他协程继续执行  </span></span><br><span class="line">        <span class="comment">//等待睡眠时间到后重新调度后继续从当前位置向下执行  </span></span><br><span class="line">        fmt.Println(<span class="string">"hello world 1!"</span>)  </span><br><span class="line">    }  </span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<figure class="highlight rust"><table><tbody><tr><td class="code"><pre><span class="line">tokio::<span class="title function_ invoke__">spawn</span>(<span class="keyword">async</span> {  </span><br><span class="line">	<span class="built_in">println!</span>(<span class="string">"ready to sleep"</span>);</span><br><span class="line">	tokio::time::<span class="title function_ invoke__">sleep</span>(time::Duration::<span class="title function_ invoke__">from_secs</span>(<span class="number">2</span>)).<span class="keyword">await</span>; </span><br><span class="line">    <span class="comment">//注意： 一定要加await！  </span></span><br><span class="line">    <span class="comment">//当前函数会在这里暂停，等待睡眠时间到后继续恢复执行  </span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">"hello world!"</span>);  </span><br><span class="line">});</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li>由于rust没有自带的运行时，所有协程的调度、执行、切换都需要依赖三方实现，比较好的就是<code>tokio</code></li>
+<li>编译器只干了一件事情:&nbsp;<code>在有await语句的地方检测是否ready，否则挂起函数，等待下次运行</code></li>
+</ul>
+<p>既然rust不像golang那样有单独的栈，那他怎么实现上下文保存和栈的重入呢？</p>
+<p>在了解rust通过await实现协程(特别强调await)前来一起看看什么叫做状态机吧。</p>
+<h2 id="状态机"><a href="#状态机" class="headerlink" title="状态机"></a>状态机</h2><p>理解协程：在特定的位置<strong>暂停</strong>（注意这不是阻塞），接着去执行其他协程，然后被唤醒后重新在当前<strong>恢复</strong>。</p>
+<p>golang使用过独立的栈做到，而rust协程是通过状态机实现。这一点区别很重要。</p>
+<ol>
+<li><code>重点</code>: rust编译器会将带有.await的代码快转换为一个enum 状态机。</li>
+<li>对于每个await的代码都实现为一个enum的分支</li>
+<li>每次协程的暂停和恢复只是进入不同的代码分支罢了</li>
+</ol>
+<p>虽然没有了额外的占的开销，但实际上编译器会生成很多指令和分支来支持这个状态机</p>
+<p>不过相比需要额外的栈内存来实现协程，这种方式已经非常棒了</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Ya0rk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/11/05/rust/rust%E5%BC%82%E6%AD%A5%E6%97%A0%E6%A0%88%E5%8D%8F%E7%A8%8B/">http://example.com/2024/11/05/rust/rust%E5%BC%82%E6%AD%A5%E6%97%A0%E6%A0%88%E5%8D%8F%E7%A8%8B/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Ya0rk の Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/rust/">rust</a><a class="post-meta__tags" href="/tags/%E6%97%A0%E6%A0%88%E5%8D%8F%E7%A8%8B/">无栈协程</a></div><div class="post_share"><div class="social-share" data-image="/img/cute.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer=""></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2025/03/05/docker/%E5%AF%BC%E5%85%A5docker%20tar%E9%95%9C%E5%83%8F/" title="导入docker tar镜像"><img class="cover" src="/img/butterfly.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">导入docker tar镜像</div></div></a></div><div class="next-post pull-right"><a href="/2024/09/22/paper/%E7%BD%91%E7%BB%9C%E5%A8%81%E8%83%81/" title="网络威胁"><img class="cover" src="/img/cover.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">网络威胁</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"></div><div class="author-info__name">Ya0rk</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">38</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Ya0rk/Ya0rk.github.io"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9C%89%E6%A0%88%E5%8D%8F%E7%A8%8B"><span class="toc-number">1.</span> <span class="toc-text">有栈协程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#go-%E5%88%9B%E5%BB%BA%E5%8D%8F%E7%A8%8B"><span class="toc-number">1.1.</span> <span class="toc-text">go 创建协程</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%97%A0%E6%A0%88%E5%8D%8F%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">无栈协程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8A%B6%E6%80%81%E6%9C%BA"><span class="toc-number">2.1.</span> <span class="toc-text">状态机</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background: transparent"><div id="footer-wrap"><div class="copyright">©2020 - 2025 By Ya0rk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async="" data-pjax="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
