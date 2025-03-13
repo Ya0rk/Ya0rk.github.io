@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>多核任务调度 | Ya0rk の Blog</title><meta name="author" content="Ya0rk"><meta name="copyright" content="Ya0rk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="背景调研以往的优秀作品中，大部分的任务调度队列使用的是全局队列，即将所有任务都放在一个fifo队列中，这样可以简化调度策略，方便代码设计。但是这样设计的缺陷也是显而易见，在多核情况下，每个核add、fetch任务都需要对全局队列进行加锁，这样会造成大量的锁竞争和等待，降低cpu利用率。 为了提高性能减少锁竞争，我们在xv6 lab8：lock的提示下想到可以将全局队列拆分给每个核的单独队列，同时保">
+<meta property="og:type" content="article">
+<meta property="og:title" content="多核任务调度">
+<meta property="og:url" content="http://example.com/2025/03/13/OS/%E5%A4%9A%E6%A0%B8%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/index.html">
+<meta property="og:site_name" content="Ya0rk の Blog">
+<meta property="og:description" content="背景调研以往的优秀作品中，大部分的任务调度队列使用的是全局队列，即将所有任务都放在一个fifo队列中，这样可以简化调度策略，方便代码设计。但是这样设计的缺陷也是显而易见，在多核情况下，每个核add、fetch任务都需要对全局队列进行加锁，这样会造成大量的锁竞争和等待，降低cpu利用率。 为了提高性能减少锁竞争，我们在xv6 lab8：lock的提示下想到可以将全局队列拆分给每个核的单独队列，同时保">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/longlin.jpg">
+<meta property="article:published_time" content="2025-03-13T13:01:50.000Z">
+<meta property="article:modified_time" content="2025-03-13T14:07:27.421Z">
+<meta property="article:author" content="Ya0rk">
+<meta property="article:tag" content="任务调度">
+<meta property="article:tag" content="任务窃取">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/longlin.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/03/13/OS/%E5%A4%9A%E6%A0%B8%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"><link rel="preconnect" href="//busuanzi.ibruce.info"><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '多核任务调度',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2025-03-13 22:07:27'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/modify.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">37</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">44</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">15</div></a></div><hr class="custom-hr"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ya0rk の Blog"><span class="site-name">Ya0rk の Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">多核任务调度</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-03-13T13:01:50.000Z" title="发表于 2025-03-13 21:01:50">2025-03-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-03-13T14:07:27.421Z" title="更新于 2025-03-13 22:07:27">2025-03-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/OS/">OS</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="多核任务调度"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>调研以往的优秀作品中，大部分的任务调度队列使用的是全局队列，即将所有任务都放在一个fifo队列中，这样可以简化调度策略，方便代码设计。但是这样设计的缺陷也是显而易见，在多核情况下，每个核add、fetch任务都需要对全局队列进行加锁，这样会造成大量的锁竞争和等待，降低cpu利用率。</p>
+<p>为了提高性能减少锁竞争，我们在xv6 lab8：lock的提示下想到可以将全局队列拆分给每个核的单独队列，同时保留一个全局优先队列。</p>
+<h3 id="设计思路"><a href="#设计思路" class="headerlink" title="设计思路"></a>设计思路</h3><p>基于工作窃取机制，每个核会先从全局优先队列中fetch任务，这里面放的是被信号唤醒的任务；如果没有优先任务，那么再从自己的队列中取任务执行；这样极大地减少了锁竞争的出现。但是这里又会出现一个极端情况，当存在大量的优先任务时，普通任务会出现饥饿现象，同时这样的设计也会退化到最初版本。所以需要为工作窃取机制找到合适的工作场景才能最大化提高性能。</p>
+<p>暂时的实现：</p>
+<figure class="highlight rust"><table><tbody><tr><td class="code"><pre><span class="line"><span class="meta">#![no_std]</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> alloc;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> alloc::collections::VecDeque;</span><br><span class="line"><span class="keyword">use</span> core::future::Future;</span><br><span class="line"><span class="keyword">use</span> core::sync::atomic::{AtomicUsize, Ordering};</span><br><span class="line"><span class="keyword">use</span> async_task::{Runnable, ScheduleInfo, Task, WithInfo};</span><br><span class="line"><span class="keyword">use</span> crate::sync::SpinNoIrqLock;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> NUM_WORKERS: <span class="type">usize</span> = <span class="number">4</span>; <span class="comment">// 有4个Worker，可以多于cpu数量</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> TASK_QUEUE: TaskQueue = TaskQueue::<span class="title function_ invoke__">new</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">TaskQueue</span> {</span><br><span class="line">    normal: [SpinNoIrqLock&lt;VecDeque&lt;Runnable&gt;&gt;; NUM_WORKERS], <span class="comment">// 每个Worker一个普通队列</span></span><br><span class="line">    prior: SpinNoIrqLock&lt;VecDeque&lt;Runnable&gt;&gt;, <span class="comment">// 全局优先队列</span></span><br><span class="line">    next_worker: AtomicUsize, <span class="comment">// 用于轮询分配任务</span></span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">TaskQueue</span> {</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">const</span> <span class="keyword">fn</span> <span class="title function_">new</span>() <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> {</span><br><span class="line">        <span class="keyword">const</span> EMPTY_QUEUE: SpinNoIrqLock&lt;VecDeque&lt;Runnable&gt;&gt; = SpinNoIrqLock::<span class="title function_ invoke__">new</span>(VecDeque::<span class="title function_ invoke__">new</span>());</span><br><span class="line">        <span class="keyword">Self</span> {</span><br><span class="line">            normal: [EMPTY_QUEUE; NUM_WORKERS],</span><br><span class="line">            prior: SpinNoIrqLock::<span class="title function_ invoke__">new</span>(VecDeque::<span class="title function_ invoke__">new</span>()),</span><br><span class="line">            next_worker: AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">        }</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// 将普通任务分配到某个Worker队列中</span></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">push_normal</span>(&amp;<span class="keyword">self</span>, runnable: Runnable) {</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">worker_id</span> = <span class="keyword">self</span>.next_worker.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed) % NUM_WORKERS;</span><br><span class="line">        <span class="keyword">self</span>.normal[worker_id].<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">push_back</span>(runnable);</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// 将优先任务推送到全局优先队列</span></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">push_prior</span>(&amp;<span class="keyword">self</span>, runnable: Runnable) {</span><br><span class="line">        <span class="keyword">self</span>.prior.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">push_back</span>(runnable);</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// 从队列中获取任务，优先从优先队列中获取，然后从当前Worker队列中获取，最后尝试窃取其他Worker的任务</span></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">fetch</span>(&amp;<span class="keyword">self</span>, worker_id: <span class="type">usize</span>) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;Runnable&gt; {</span><br><span class="line">        <span class="comment">// 首先从优先队列中获取任务</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Some</span>(task) = <span class="keyword">self</span>.prior.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">pop_front</span>() {</span><br><span class="line">            <span class="keyword">return</span> <span class="title function_ invoke__">Some</span>(task);</span><br><span class="line">        }</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 然后从当前Worker队列中获取任务</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Some</span>(task) = <span class="keyword">self</span>.normal[worker_id].<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">pop_front</span>() {</span><br><span class="line">            <span class="keyword">return</span> <span class="title function_ invoke__">Some</span>(task);</span><br><span class="line">        }</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 最后尝试从其他Worker队列中窃取任务</span></span><br><span class="line">        <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">0</span>..NUM_WORKERS {</span><br><span class="line">            <span class="keyword">if</span> i != worker_id {</span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Some</span>(task) = <span class="keyword">self</span>.normal[i].<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">pop_front</span>() {</span><br><span class="line">                    <span class="keyword">return</span> <span class="title function_ invoke__">Some</span>(task);</span><br><span class="line">                }</span><br><span class="line">            }</span><br><span class="line">        }</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果没有任务，返回None</span></span><br><span class="line">        <span class="literal">None</span></span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">len</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="type">usize</span> {</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">prior_len</span> = <span class="keyword">self</span>.prior.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">len</span>();</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">normal_len</span> = <span class="keyword">self</span>.normal.<span class="title function_ invoke__">iter</span>().<span class="title function_ invoke__">map</span>(|q| q.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">len</span>()).sum::&lt;<span class="type">usize</span>&gt;();</span><br><span class="line">        prior_len + normal_len</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">is_empty</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="type">bool</span> {</span><br><span class="line">        <span class="keyword">self</span>.prior.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">is_empty</span>() &amp;&amp; <span class="keyword">self</span>.normal.<span class="title function_ invoke__">iter</span>().<span class="title function_ invoke__">all</span>(|q| q.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">is_empty</span>())</span><br><span class="line">    }</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="comment">/// 将任务加入队列</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">spawn</span>&lt;F&gt;(future: F)</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">    F: Future + <span class="built_in">Send</span> + <span class="symbol">'static</span>,</span><br><span class="line">    F::Output: <span class="built_in">Send</span> + <span class="symbol">'static</span>,</span><br><span class="line">{</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">schedule</span> = <span class="keyword">move</span> |runnable: Runnable, info: ScheduleInfo| {</span><br><span class="line">        <span class="keyword">if</span> info.woken_while_running {</span><br><span class="line">            TASK_QUEUE.<span class="title function_ invoke__">push_normal</span>(runnable);</span><br><span class="line">        } <span class="keyword">else</span> {</span><br><span class="line">            TASK_QUEUE.<span class="title function_ invoke__">push_prior</span>(runnable);</span><br><span class="line">        }</span><br><span class="line">    };</span><br><span class="line">    <span class="keyword">let</span> (runnable, task) = async_task::<span class="title function_ invoke__">spawn</span>(future, <span class="title function_ invoke__">WithInfo</span>(schedule));</span><br><span class="line">    runnable.<span class="title function_ invoke__">schedule</span>();</span><br><span class="line">    task.<span class="title function_ invoke__">detach</span>();</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="comment">/// 运行任务队列中的任务</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">run</span>(worker_id: <span class="type">usize</span>) {</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Some</span>(task) = TASK_QUEUE.<span class="title function_ invoke__">fetch</span>(worker_id) {</span><br><span class="line">        task.<span class="title function_ invoke__">run</span>();</span><br><span class="line">    }</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在一些情境下，我们可以增加队列数量，这会带来如下好处：</p>
+<ul>
+<li><strong>更好的I/O密集型任务处理</strong>：<ul>
+<li>如果任务中有较多的I/O操作（如文件读写、网络请求等），多<code>Worker</code>可以在某些<code>Worker</code>等待I/O时，切换到其他任务，提高CPU利用率。</li>
+</ul>
+</li>
+<li><strong>更高的任务并发性</strong>：<ul>
+<li>更多的<code>Worker</code>可以同时处理更多的任务，适合任务量较大的场景。</li>
+</ul>
+</li>
+<li><strong>灵活性</strong>：<ul>
+<li>可以根据任务类型动态调整<code>Worker</code>的数量，例如为高优先级任务分配更多的<code>Worker</code>。</li>
+</ul>
+</li>
+</ul>
+<p>==但是注意：这并不代表worker数量越多越好，过多的worker可能会增加对全局优先队列的锁竞争==</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Ya0rk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/03/13/OS/%E5%A4%9A%E6%A0%B8%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/">http://example.com/2025/03/13/OS/%E5%A4%9A%E6%A0%B8%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Ya0rk の Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/">任务调度</a><a class="post-meta__tags" href="/tags/%E4%BB%BB%E5%8A%A1%E7%AA%83%E5%8F%96/">任务窃取</a></div><div class="post_share"><div class="social-share" data-image="/img/longlin.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer=""></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2025/03/12/pwn/protobuf/" title="protobuf"><img class="cover" src="/img/cute.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">protobuf</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"></div><div class="author-info__name">Ya0rk</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">37</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">44</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">15</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Ya0rk/Ya0rk.github.io"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="toc-number">2.</span> <span class="toc-text">设计思路</span></a></li></ol></div></div></div></div></main><footer id="footer" style="background: transparent"><div id="footer-wrap"><div class="copyright">©2020 - 2025 By Ya0rk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async="" data-pjax="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
